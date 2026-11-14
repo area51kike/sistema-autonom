@@ -1,5 +1,10 @@
 const routes = [
   {
+    path: '/login',
+    component: () => import('@/pages/LoginPage.vue'),
+    meta: { publica: true }
+  },
+  {
     path: '/',
     component: () => import('@/layouts/MainLayout.vue'),
     children: [
@@ -12,6 +17,11 @@ const routes = [
       { path: 'asientos', component: () => import('@/pages/AsientosPage.vue') },
       { path: 'reportes', component: () => import('@/pages/ReportesPage.vue') },
       { path: 'costos', component: () => import('@/pages/CostosPage.vue') },
+      {
+        path: 'bitacora',
+        component: () => import('@/pages/BitacoraPage.vue'),
+        meta: { admin: true }
+      },
       { path: 'second', component: () => import('@/pages/SecondPage.vue') }
     ]
   },

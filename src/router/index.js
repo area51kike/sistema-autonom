@@ -7,17 +7,9 @@ import {
 } from 'vue-router'
 
 import routes from './routes.js'
+import { sesion, iniciarSesion, esAdmin } from '../services/auth'
 
-/*
- * If not building with SSR mode, you can
- * directly export the Router instantiation;
- *
- * The function below can be async too; either use
- * async/await or return a Promise which resolves
- * with the Router instance.
- */
-
-export default defineRouter((/* { store, ssrContext } */) => {
+export default defineRouter(() => {
   const createHistory = import.meta.env.QUASAR_SERVER
     ? createMemoryHistory
     : import.meta.env.QUASAR_VUE_ROUTER_MODE === 'history'
@@ -27,11 +19,15 @@ export default defineRouter((/* { store, ssrContext } */) => {
   const Router = createRouter({
     scrollBehavior: () => ({ left: 0, top: 0 }),
     routes,
-
-    // Leave this as is and make changes in quasar.conf.js instead!
-    // quasar.conf.js -> build -> vueRouterMode
-    // quasar.conf.js -> build -> publicPath
     history: createHistory(import.meta.env.QUASAR_VUE_ROUTER_BASE)
+  })
+
+  Router.beforeEach(async to => {
+    if (!sesion.listo) await iniciarSesion()
+    if (to.meta.publica) return sesion.user ? '/' : true
+    if (!sesion.user) return '/login'
+    if (to.meta.admin && !esAdmin.value) return '/'
+    return true
   })
 
   return Router

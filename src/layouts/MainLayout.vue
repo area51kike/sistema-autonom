@@ -11,7 +11,15 @@
           @click="drawer = !drawer"
         />
         <q-toolbar-title>Sistema Contable Autónomo 🐝✨</q-toolbar-title>
-        <div>UES OCC - Sistemas</div>
+        <div class="q-mr-md gt-xs">
+          {{ sesion.perfil?.email }}
+          <q-badge
+            :color="esAdmin ? 'amber-8' : 'teal'"
+            :label="sesion.perfil?.rol"
+            class="q-ml-xs"
+          />
+        </div>
+        <q-btn flat dense icon="logout" label="Salir" no-caps @click="salir" />
       </q-toolbar>
     </q-header>
 
@@ -19,7 +27,7 @@
       <q-list>
         <q-item-label header>Módulos del Sistema</q-item-label>
         <q-item
-          v-for="m in modulos"
+          v-for="m in modulosVisibles"
           :key="m.to"
           clickable
           v-ripple
@@ -44,8 +52,11 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { sesion, esAdmin, logout } from '../services/auth'
 
+const router = useRouter()
 const drawer = ref(false)
 
 const modulos = [
@@ -79,6 +90,22 @@ const modulos = [
     icono: 'hive',
     titulo: 'Costos de Producción',
     detalle: 'Pre-cosecha y Cosecha'
+  },
+  {
+    to: '/bitacora',
+    icono: 'history',
+    titulo: 'Bitácora de cambios',
+    detalle: 'Solo administrador',
+    admin: true
   }
 ]
+
+const modulosVisibles = computed(() =>
+  modulos.filter(m => !m.admin || esAdmin.value)
+)
+
+async function salir() {
+  await logout()
+  router.replace('/login')
+}
 </script>
