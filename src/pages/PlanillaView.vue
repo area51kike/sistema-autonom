@@ -27,6 +27,21 @@
                 dense
                 :rules="[v => !!v || 'Requerido']"
               />
+              <q-banner
+  v-if="deuda.total > 0"
+  dense
+  rounded
+  class="bg-orange-2 text-orange-10"
+>
+  <template #avatar>
+    <q-icon name="warning" color="orange-10" />
+  </template>
+  Este colaborador tiene una deuda pendiente de
+  <b>{{ money(deuda.total) }}</b>
+  <div v-for="d in deuda.items" :key="d.id_deuda" class="text-caption">
+    • {{ d.concepto || 'Sin concepto' }}: {{ money(d.saldo) }}
+  </div>
+</q-banner>
               <q-select
                 v-model="form.tipoPersonal"
                 :options="tiposPersonal"
@@ -63,6 +78,19 @@
                 outlined
                 dense
               />
+              <q-input
+  v-if="deuda.total > 0"
+  v-model.number="form.descuentoDeuda"
+  label="Descontar deuda de esta planilla ($)"
+  type="number"
+  step="0.01"
+  min="0"
+  :max="deuda.total"
+  outlined
+  dense
+  hint="Máximo: lo que debe"
+  :rules="[v => v <= deuda.total || 'No puede superar la deuda']"
+/>
               <q-btn
                 label="Calcular y contabilizar"
                 type="submit"
@@ -142,6 +170,14 @@
                 <q-item-label>{{ money(resultado.afp_patronal) }}</q-item-label>
               </q-item-section>
             </q-item>
+            <q-item v-if="resultado.descuento_deuda > 0">
+  <q-item-section>
+    <q-item-label caption>Descuento por deuda</q-item-label>
+    <q-item-label class="text-negative">
+      -{{ money(resultado.descuento_deuda) }}
+    </q-item-label>
+  </q-item-section>
+</q-item>
             <q-item class="bg-grey-2">
               <q-item-section>
                 <q-item-label class="text-h6 text-weight-bold"
@@ -189,9 +225,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
-import { procesarPlanilla, listarPlanillas } from '../services/planilla'
+import { procesarPlanilla, listarPlanillas, obtenerDeuda } from '../services/planilla'
 
 const $q = useQuasar()
 const loading = ref(false)
@@ -218,8 +254,32 @@ const form = ref({
   tipoPersonal: 'Personal de Operación / Apícola',
   salarioBase: null,
   dias: 30,
-  bonos: 0
+  bonos: 0,
+  descuentoDeuda: 0
 })
+
+const deuda = ref({ items: [], total: 0 })
+
+let timerDeuda = null
+watch(
+  () => form.value.nombre,
+  nombre => {
+    clearTimeout(timerDeuda)
+    if (!nombre || nombre.trim().length < 3) {
+      deuda.value = { items: [], total: 0 }
+      form.value.descuentoDeuda = 0
+      return
+    }
+    timerDeuda = setTimeout(async () => {
+      try {
+        deuda.value = await obtenerDeuda(nombre)
+        form.value.descuentoDeuda = 0
+      } catch (e) {
+        console.error(e)
+      }
+    }, 400)
+  }
+)
 
 const columnas = [
   { name: 'fecha', label: 'Fecha', field: 'fecha', align: 'left' },
@@ -237,8 +297,44 @@ const columnas = [
     align: 'right'
   },
   {
+    name: 'isss',
+    label: 'ISSS',
+    field: r => money(r.isss),
+    align: 'right'
+  },
+  {
+    name: 'afp',
+    label: 'AFP',
+    field: r => money(r.afp),
+    align: 'right'
+  },
+  {
+    name: 'renta',
+    label: 'Renta',
+    field: r => money(r.renta),
+    align: 'right'
+  },
+  {
+    name: 'deuda',
+    label: 'Desc. deuda',
+    field: r => money(r.descuento_deuda),
+    align: 'right'
+  },
+  {
+    name: 'totalDesc',
+    label: 'Total descuentos',
+    field: r =>
+      money(
+        Number(r.isss || 0) +
+          Number(r.afp || 0) +
+          Number(r.renta || 0) +
+          Number(r.descuento_deuda || 0)
+      ),
+    align: 'right'
+  },
+  {
     name: 'neto',
-    label: 'Neto',
+    label: 'Neto pagado',
     field: r => money(r.salario_neto),
     align: 'right'
   },
@@ -272,6 +368,8 @@ async function procesar() {
     form.value.nombre = ''
     form.value.salarioBase = null
     form.value.bonos = 0
+    form.value.descuentoDeuda = 0
+    deuda.value = { items: [], total: 0 }
     await cargarHistorial()
   } catch (e) {
     $q.notify({ type: 'negative', message: e.message })
