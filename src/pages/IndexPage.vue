@@ -1,7 +1,7 @@
 <template>
   <q-page class="flex flex-center text-center">
     <div>
-      <q-icon name="hive" size="100px" color="amber-8" />
+      <q-icon name="hive" size="100px" color="yellow-9" />
       <div class="text-h4 text-weight-bold q-mt-md"
         >Sistema Autónomo Apícola</div
       >

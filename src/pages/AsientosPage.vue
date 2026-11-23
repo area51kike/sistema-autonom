@@ -1,6 +1,6 @@
 <template>
   <q-page class="q-pa-md">
-    <div class="text-h4 text-weight-bold text-primary q-mb-md"
+    <div class="text-h4 text-weight-bold text-black q-mb-md"
       >Libro Diario</div
     >
 
