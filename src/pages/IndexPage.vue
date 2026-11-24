@@ -6,13 +6,13 @@
         Sistema Autónomo Apícola
       </div>
       <p class="text-subtitle1 text-grey-8 q-mt-sm">
-        Bienvenido al panel de control central. Selecciona el módulo de
-        tu interés en el menú lateral para comenzar.
+        Bienvenido al panel de control central. Seleccione el módulo de
+        su interés en el menú lateral para comenzar.
       </p>
       <q-btn
         color="primary"
         label="Ir a catálogo de cuentas"
-        to="/planillas"
+        to="/catalogo"
         class="q-mt-md"
         icon-right="arrow_forward"
       />
