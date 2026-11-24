@@ -1,1 +1,16 @@
 // app global css
+.bg-apicola {
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)),
+    url("../assets/fondo.jpeg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.panel-bienvenida {
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 520px;
+}
